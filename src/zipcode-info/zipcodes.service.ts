@@ -1,8 +1,12 @@
+import { HttpService } from '@nestjs/axios';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { lastValueFrom } from 'rxjs';
 import ZipInfo from './zipcodes.interface';
 
 @Injectable()
 export default class ZipCodesService {
+  constructor(private httpService: HttpService) {}
+
   private maxHistory = 5;
   private zipCodesInfo: Array<ZipInfo> = [
     {
@@ -21,15 +25,31 @@ export default class ZipCodesService {
     return this.zipCodesInfo;
   }
 
-  getCodeInfoByCountryAndZipCode(country: string, zipcode: string) {
-    const zipInfo = this.zipCodesInfo.find(
+  async getCodeInfoByCountryAndZipCode(country: string, zipcode: string) {
+    let zipInfo = this.zipCodesInfo.find(
       (item) => item.country === country && item.zipcode === zipcode,
     );
     if (zipInfo) {
       this.zipCodesInfo.push(zipInfo);
       return zipInfo;
+    } else {
+      try {
+        const response = await lastValueFrom(
+          this.httpService.get(
+            `http://api.zippopotam.us/${country}/${zipcode}`,
+          ),
+          { defaultValue: undefined },
+        );
+        zipInfo = { country, zipcode, info: response.data };
+        if (this.zipCodesInfo.length == this.maxHistory) {
+          this.zipCodesInfo.shift();
+        }
+        this.zipCodesInfo.push(zipInfo);
+        return zipInfo;
+      } catch (error) {
+        throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+      }
     }
-    throw new HttpException('zipInfo not found', HttpStatus.NOT_FOUND);
   }
 
   clearHistory() {

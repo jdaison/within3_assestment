@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
 import { Test, TestingModule } from '@nestjs/testing';
 import ZipCodesController from './zipcodes.controller';
 import ZipCodesService from './zipcodes.service';
@@ -8,6 +8,7 @@ describe('ZipCodesController', () => {
 
   beforeAll(async () => {
     app = await Test.createTestingModule({
+      imports: [HttpModule],
       controllers: [ZipCodesController],
       providers: [ZipCodesService],
     }).compile();
@@ -26,22 +27,20 @@ describe('ZipCodesController', () => {
   describe('getCodeInfoByCountryAndZipCode', () => {
     it('should return an error', () => {
       const appController = app.get<ZipCodesController>(ZipCodesController);
-      expect(() => {
-        appController.getCodeInfoByCountryAndZipCode({
+      expect(async () => {
+        await appController.getCodeInfoByCountryAndZipCode({
           countryCode: 'CO',
-          zipcode: '123456',
+          zipcode: '12345',
         });
-      }).toThrowError(
-        new HttpException('zipInfo not found', HttpStatus.NOT_FOUND),
-      );
+      }).rejects.toThrowError('Request failed with status code 404');
     });
   });
 
   describe('getCodeInfoByCountryAndZipCode', () => {
-    it('should return an zipcode info', () => {
+    it('should return an zipcode info', async () => {
       const appController = app.get<ZipCodesController>(ZipCodesController);
       expect(
-        appController.getCodeInfoByCountryAndZipCode({
+        await appController.getCodeInfoByCountryAndZipCode({
           countryCode: 'US',
           zipcode: '12345',
         }),
@@ -53,6 +52,36 @@ describe('ZipCodesController', () => {
     it('should return an empty array', () => {
       const appController = app.get<ZipCodesController>(ZipCodesController);
       expect(appController.clearHistory()).toEqual([]);
+    });
+  });
+
+  /*integration test*/
+  describe('getCodeInfoByCountryAndZipCode', () => {
+    it('should return an zipcode info', async () => {
+      const appController = app.get<ZipCodesController>(ZipCodesController);
+      expect(
+        await appController.getCodeInfoByCountryAndZipCode({
+          countryCode: 'US',
+          zipcode: '90210',
+        }),
+      ).toEqual({
+        country: 'US',
+        zipcode: '90210',
+        info: {
+          country: 'United States',
+          'country abbreviation': 'US',
+          places: [
+            {
+              latitude: '34.0901',
+              longitude: '-118.4065',
+              'place name': 'Beverly Hills',
+              state: 'California',
+              'state abbreviation': 'CA',
+            },
+          ],
+          'post code': '90210',
+        },
+      });
     });
   });
 });
