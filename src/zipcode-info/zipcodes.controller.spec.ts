@@ -15,12 +15,9 @@ describe('ZipCodesController', () => {
   });
 
   describe('getHistory', () => {
-    it('should return an array with history', () => {
+    it('should return an array without history', () => {
       const appController = app.get<ZipCodesController>(ZipCodesController);
-      expect(appController.getHistory()).toEqual([
-        { country: 'US', info: 'test', zipcode: '12345' },
-        { country: 'US', info: 'test2', zipcode: '67890' },
-      ]);
+      expect(appController.getHistory().length).toBe(0);
     });
   });
 
@@ -44,18 +41,28 @@ describe('ZipCodesController', () => {
           countryCode: 'US',
           zipcode: '12345',
         }),
-      ).toEqual({ country: 'US', info: 'test', zipcode: '12345' });
+      ).toEqual({
+        country: 'US',
+        zipcode: '12345',
+        info: {
+          country: 'United States',
+          'country abbreviation': 'US',
+          places: [
+            {
+              latitude: '42.8333',
+              longitude: '-74.058',
+              'place name': 'Schenectady',
+              state: 'New York',
+              'state abbreviation': 'NY',
+            },
+          ],
+          'post code': '12345',
+
+        },
+      });
     });
   });
 
-  describe('clearHistory', () => {
-    it('should return an empty array', () => {
-      const appController = app.get<ZipCodesController>(ZipCodesController);
-      expect(appController.clearHistory()).toEqual([]);
-    });
-  });
-
-  /*integration test*/
   describe('getCodeInfoByCountryAndZipCode', () => {
     it('should return an zipcode info', async () => {
       const appController = app.get<ZipCodesController>(ZipCodesController);
@@ -82,6 +89,20 @@ describe('ZipCodesController', () => {
           'post code': '90210',
         },
       });
+    });
+  });
+
+  describe('getHistory', () => {
+    it('should return an array with history', () => {
+      const appController = app.get<ZipCodesController>(ZipCodesController);
+      expect(appController.getHistory().length).toBe(2);
+    });
+  });
+
+  describe('clearHistory', () => {
+    it('should return an empty array', () => {
+      const appController = app.get<ZipCodesController>(ZipCodesController);
+      expect(appController.clearHistory()).toEqual([]);
     });
   });
 });

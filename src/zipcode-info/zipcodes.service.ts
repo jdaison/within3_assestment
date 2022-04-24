@@ -2,29 +2,21 @@ import { HttpService } from '@nestjs/axios';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { lastValueFrom } from 'rxjs';
 import ZipInfo from './zipcodes.interface';
-
+import { Cache, CacheContainer } from 'node-ts-cache';
+import { MemoryStorage } from 'node-ts-cache-storage-memory';
+const zipcodesCache = new CacheContainer(new MemoryStorage());
 @Injectable()
 export default class ZipCodesService {
   constructor(private httpService: HttpService) {}
 
   private maxHistory = 5;
-  private zipCodesInfo: Array<ZipInfo> = [
-    {
-      country: 'US',
-      zipcode: '12345',
-      info: 'test',
-    },
-    {
-      country: 'US',
-      zipcode: '67890',
-      info: 'test2',
-    },
-  ];
+  private zipCodesInfo: Array<ZipInfo> = [];
 
   getHistory() {
     return this.zipCodesInfo;
   }
 
+  @Cache(zipcodesCache, { ttl: 60 })
   async getCodeInfoByCountryAndZipCode(country: string, zipcode: string) {
     let zipInfo = this.zipCodesInfo.find(
       (item) => item.country === country && item.zipcode === zipcode,
