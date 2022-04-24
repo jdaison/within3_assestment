@@ -57,7 +57,6 @@ describe('ZipCodesController', () => {
             },
           ],
           'post code': '12345',
-
         },
       });
     });

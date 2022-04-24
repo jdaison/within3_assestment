@@ -4,8 +4,15 @@ Backend to get zip code info using country code and zip code consuming https://a
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
-## Installation
 
+
+## Using docker to build for production
+Run next command in the folder then use the postman collection to do some tests
+```bash
+$ docker-compose up               
+```
+
+## Installation
 ```bash
 $ npm install
 ```
